@@ -48,10 +48,10 @@ export class SongResolver {
 
         @Mutation("updateSong")
         async updateSong(
+                @Args('id')
+                id: string,
                 @Args("updateSongInput")
                 args: UpdateSongDTO,
-                @Args('id')
-                id: string
         ): Promise<UpdateResult> {
                 return this.songService.updateSong(id, args);
         }
