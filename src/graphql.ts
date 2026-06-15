@@ -35,6 +35,10 @@ export abstract class IMutation {
     abstract deleteSong(id: string): DeleteResult | Promise<DeleteResult>;
 }
 
+export abstract class ISubscription {
+    abstract songCreated(): Song | Promise<Song>;
+}
+
 export class UpdateResult {
     affected: number;
 }

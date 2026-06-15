@@ -5,6 +5,11 @@ import { CreateSongDTO } from "./dto/create-song-dto";
 import { UpdateSongDTO } from "./dto/update-song-dto";
 import { UpdateResult, DeleteResult } from "typeorm";
 import { GraphQLError } from "graphql/error";
+import { PubSub } from "graphql-subscriptions";
+import { Subscription } from "@nestjs/graphql";
+
+
+const pubSub = new PubSub();
 @Resolver()
 export class SongResolver {
         constructor(private songService: SongService) { }
@@ -12,9 +17,9 @@ export class SongResolver {
         async getSongs(): Promise<Song[]> {
                 return this.songService.getSongs();
                 //throw new Error('Unable to fetch song')
-                throw new GraphQLError('Unable to fetch song',{
-                        extensions:{
-                                code:'INTERNAL_SERVER_ERROR'
+                throw new GraphQLError('Unable to fetch song', {
+                        extensions: {
+                                code: 'INTERNAL_SERVER_ERROR'
                         }
                 })
         }
@@ -32,7 +37,13 @@ export class SongResolver {
                 @Args("createSongInput")
                 args: CreateSongDTO
         ): Promise<Song> {
-                return this.songService.createSong(args);
+                //publish new song
+                const newSong = this.songService.createSong(args);
+                pubSub.publish("songCreated", { songCreated: newSong });
+                return newSong;
+
+
+                //return this.songService.createSong(args);
         }
 
         @Mutation("updateSong")
@@ -51,6 +62,11 @@ export class SongResolver {
                 id: string,
         ): Promise<DeleteResult> {
                 return this.songService.deleteSong(id);
+        }
+
+        @Subscription('songCreated')
+        songCreated() {
+                return pubSub.asyncIterableIterator('songCreated');
         }
 
 
